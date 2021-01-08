@@ -1,12 +1,12 @@
 import * as express from "express";
 import { Request, Response } from "express";
-import * as fs from "fs";
 import { sign } from "jsonwebtoken";
 import * as passport from "passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import * as path from "path";
 import "reflect-metadata";
 import { createConnection, getRepository } from "typeorm";
+import { Token } from "../common/types";
 import { User } from "./entity/User";
 import { Routes } from "./routes";
 
@@ -93,7 +93,12 @@ createConnection()
             }
 
             const token = sign(
-                { sub: user.id, adm: user.isAdmin, iat: Date.now() },
+                {
+                    sub: user.id,
+                    adm: user.isAdmin,
+                    iat: Date.now(),
+                    unm: user.username,
+                } as Token,
                 String(process.env.SECRET),
                 {
                     expiresIn: Math.floor(Date.now() / 1000) + 60 * 60,
@@ -114,13 +119,8 @@ createConnection()
             }
         );
 
-        // setup express app here
-        // ...
-
-        // start express server
         app.listen(3000);
 
-        // insert new users for test
         await connection.manager.save(
             connection.manager.create(User, {
                 username: "user",

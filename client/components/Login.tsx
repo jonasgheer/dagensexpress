@@ -1,15 +1,17 @@
 import * as React from "react";
 import { useState } from "react";
-import { Home } from "./Home";
 import useFetch from "use-http";
+import { App } from "./App";
 
 export function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [jwt, setJwt] = useState();
     const { post, response, loading, error } = useFetch("/login");
 
     async function submitLogin() {
         const res = await post({ username, password });
+        setJwt(res.token);
         localStorage.setItem("jwt", res.token);
     }
 
@@ -22,7 +24,7 @@ export function Login() {
     }
 
     if (response.ok) {
-        return <Home />;
+        return <App token={jwt} />;
     }
 
     return (
