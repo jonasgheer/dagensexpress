@@ -1,14 +1,11 @@
 import * as express from "express";
-import { Request, Response } from "express";
-import { sign } from "jsonwebtoken";
 import * as passport from "passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import * as path from "path";
 import "reflect-metadata";
-import { createConnection, getRepository } from "typeorm";
-import { Token } from "../common/types";
+import { createConnection } from "typeorm";
 import { User } from "./entity/User";
-import { Routes } from "./routes";
+import login from "./routes/login";
 
 const options = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -17,8 +14,6 @@ const options = {
 
 createConnection()
     .then(async (connection) => {
-        const app = express();
-
         passport.use(
             new Strategy(options, (jwtPayload, done) => {
                 console.log(jwtPayload);
@@ -36,9 +31,11 @@ createConnection()
             })
         );
 
+        const app = express();
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(passport.initialize());
+        app.use(express.static(path.join(__dirname, "public")));
 
         switch (process.env.NODE_ENV) {
             case "production":
@@ -51,73 +48,7 @@ createConnection()
                 throw new Error("please specify environment");
         }
 
-        Routes.forEach((route) => {
-            (app as any)[route.method](
-                route.route,
-                (req: Request, res: Response, next: Function) => {
-                    const result = new (route.controller as any)()[
-                        route.action
-                    ](req, res, next);
-                    if (result instanceof Promise) {
-                        result.then((result) =>
-                            result !== null && result !== undefined
-                                ? res.send(result)
-                                : undefined
-                        );
-                    } else if (result !== null && result !== undefined) {
-                        res.json(result);
-                    }
-                }
-            );
-        });
-
-        app.get("/login", (_, res) => {
-            res.sendFile(path.join(__dirname + "public/login.html"));
-        });
-
-        app.post("/login", async (req, res) => {
-            const user = await getRepository(User).findOne({
-                where: { username: req.body.username },
-            });
-
-            if (!user) {
-                res.status(401).json({
-                    success: false,
-                    msg: "could not find user",
-                });
-                return;
-            }
-
-            if (user.password !== req.body.password) {
-                res.redirect("/login");
-            }
-
-            const token = sign(
-                {
-                    sub: user.id,
-                    adm: user.isAdmin,
-                    iat: Date.now(),
-                    unm: user.username,
-                } as Token,
-                String(process.env.SECRET),
-                {
-                    expiresIn: Math.floor(Date.now() / 1000) + 60 * 60,
-                }
-            );
-
-            res.status(200).json({
-                success: true,
-                token: "Bearer " + token,
-            });
-        });
-
-        app.get(
-            "/hello",
-            passport.authenticate("jwt", { session: false }),
-            (req, res) => {
-                res.status(200).json({ success: true, msg: "You are in!" });
-            }
-        );
+        app.use("/login", login);
 
         app.listen(3000);
 
