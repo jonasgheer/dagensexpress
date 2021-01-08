@@ -1,5 +1,6 @@
 import jwtDecode from "jwt-decode";
 import * as React from "react";
+import { useState } from "react";
 import * as ReactDOM from "react-dom";
 import { Token } from "../../common/types";
 import { AdminHome } from "./AdminHome";
@@ -15,6 +16,7 @@ export const UserContext = React.createContext<{
 } | null>(null);
 
 export function App({ token }: { token?: string }) {
+    const [lastServerUpdate, setLastServerUpdate] = useState();
     const jwt = token ?? localStorage.getItem("jwt");
 
     if (!jwt) {
@@ -26,13 +28,9 @@ export function App({ token }: { token?: string }) {
     const home = decoded.adm ? <AdminHome /> : <UserHome />;
 
     const socket = new WebSocket("ws://localhost:8080");
-    socket.addEventListener("open", () => {
-        socket.send("Hello server");
+    socket.addEventListener("message", (msg) => {
+        setLastServerUpdate(msg.data);
     });
-
-    socket.addEventListener("message", (m) =>
-        console.log("we got a message!", m)
-    );
 
     return (
         <UserContext.Provider

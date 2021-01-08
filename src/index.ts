@@ -65,14 +65,8 @@ createConnection()
         });
 
         setTimeout(() => {
-            console.log("sending to clients");
-            console.log(wss.connections);
-            wss.broadcast("hello from the server");
+            wss.broadcast(Date.now());
         }, 5000);
-
-        wss.on("connect", () => console.log("we have a connection"));
-
-        wss.on("request", (e) => console.log("got a request"));
 
         await connection.manager.save(
             connection.manager.create(User, {
