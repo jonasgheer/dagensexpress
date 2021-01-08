@@ -25,6 +25,6 @@
         "websocket": "^1.0.33"
     },
     "scripts": {
-        "start": "ts-node src/index.ts"
+        "dev": "rm database.sqlite && ts-node src/index.ts"
     }
 }

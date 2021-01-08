@@ -1,13 +1,15 @@
 import * as express from "express";
+import { unlinkSync } from "fs";
+import * as http from "http";
 import * as passport from "passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
 import * as path from "path";
 import "reflect-metadata";
 import { createConnection } from "typeorm";
+import { server } from "websocket";
 import { User } from "./entity/User";
 import login from "./routes/login";
-import { server } from "websocket";
-import * as http from "http";
+import { fillDatabaseWithTestData } from "./testdata";
 
 export let wss: server;
 
@@ -39,17 +41,10 @@ createConnection()
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(passport.initialize());
-        app.use(express.static(path.join(__dirname, "public")));
 
-        switch (process.env.NODE_ENV) {
-            case "production":
-                app.use(express.static(path.join(__dirname, "public")));
-                break;
-            case "development":
-                app.use(express.static(path.join(__dirname, "../client/dist")));
-                break;
-            default:
-                throw new Error("please specify environment");
+        if (process.env.NODE_ENV === "development") {
+            await fillDatabaseWithTestData(connection);
+            app.use(express.static(path.join(__dirname, "../client/dist")));
         }
 
         app.use("/login", login);
@@ -61,26 +56,12 @@ createConnection()
 
         wss = new server({
             httpServer: httpServer,
-            autoAcceptConnections: true, // todo
+            autoAcceptConnections: process.env.NODE_ENV === "development",
         });
 
         setTimeout(() => {
             wss.broadcast(Date.now());
         }, 5000);
-
-        await connection.manager.save(
-            connection.manager.create(User, {
-                username: "user",
-                password: "user",
-            })
-        );
-        await connection.manager.save(
-            connection.manager.create(User, {
-                username: "admin",
-                password: "admin",
-                isAdmin: true,
-            })
-        );
 
         console.log(
             "Express server has started on port 3000. Open http://localhost:3000/users to see results"
