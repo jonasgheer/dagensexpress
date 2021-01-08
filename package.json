@@ -9,6 +9,7 @@
         "@types/node": "^8.0.29",
         "@types/passport": "^1.0.5",
         "@types/passport-jwt": "^3.0.3",
+        "@types/websocket": "^1.0.1",
         "prettier": "^2.2.1",
         "ts-node": "3.3.0",
         "typescript": "3.3.3333"
@@ -20,7 +21,8 @@
         "passport-jwt": "^3.0.1",
         "reflect-metadata": "^0.1.10",
         "sqlite3": "^5.0.0",
-        "typeorm": "0.2.29"
+        "typeorm": "0.2.29",
+        "websocket": "^1.0.33"
     },
     "scripts": {
         "start": "ts-node src/index.ts"

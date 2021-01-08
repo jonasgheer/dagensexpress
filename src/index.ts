@@ -6,6 +6,10 @@ import "reflect-metadata";
 import { createConnection } from "typeorm";
 import { User } from "./entity/User";
 import login from "./routes/login";
+import { server } from "websocket";
+import * as http from "http";
+
+export let wss: server;
 
 const options = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -51,6 +55,24 @@ createConnection()
         app.use("/login", login);
 
         app.listen(3000);
+
+        const httpServer = http.createServer();
+        httpServer.listen(8080, () => console.log("server listening on 8080"));
+
+        wss = new server({
+            httpServer: httpServer,
+            autoAcceptConnections: true, // todo
+        });
+
+        setTimeout(() => {
+            console.log("sending to clients");
+            console.log(wss.connections);
+            wss.broadcast("hello from the server");
+        }, 5000);
+
+        wss.on("connect", () => console.log("we have a connection"));
+
+        wss.on("request", (e) => console.log("got a request"));
 
         await connection.manager.save(
             connection.manager.create(User, {

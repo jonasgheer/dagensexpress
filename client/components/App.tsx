@@ -25,6 +25,15 @@ export function App({ token }: { token?: string }) {
 
     const home = decoded.adm ? <AdminHome /> : <UserHome />;
 
+    const socket = new WebSocket("ws://localhost:8080");
+    socket.addEventListener("open", () => {
+        socket.send("Hello server");
+    });
+
+    socket.addEventListener("message", (m) =>
+        console.log("we got a message!", m)
+    );
+
     return (
         <UserContext.Provider
             value={{
