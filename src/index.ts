@@ -12,37 +12,44 @@ import { Routes } from "./routes";
 
 const options = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: fs.readFileSync(
-        path.join(__dirname, "..", "id_rsa.pub"),
-        "utf-8"
-    ),
-    algorithms: ["RS256"],
+    secretOrKey: String(process.env.SECRET),
 };
 
 createConnection()
     .then(async (connection) => {
+        const app = express();
+
         passport.use(
-            new Strategy(options, async (jwtPayload, done) => {
-                let user: User | undefined;
-                try {
-                    user = await connection.manager.findOne(User, {
-                        where: { id: jwtPayload.id },
-                    });
-                } catch (err) {
-                    return done(err, false);
-                }
-                if (user) {
-                    return done(null, user);
-                } else {
-                    return done(null, false);
-                }
+            new Strategy(options, (jwtPayload, done) => {
+                console.log(jwtPayload);
+                connection.manager
+                    .findOne(User, { where: { id: jwtPayload.sub } })
+                    .then((user) => {
+                        console.log(user);
+                        if (user) {
+                            return done(null, user);
+                        } else {
+                            return done(null, false);
+                        }
+                    })
+                    .catch((err) => done(err, false));
             })
         );
 
-        const app = express();
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(passport.initialize());
+
+        switch (process.env.NODE_ENV) {
+            case "production":
+                app.use(express.static(path.join(__dirname, "public")));
+                break;
+            case "development":
+                app.use(express.static(path.join(__dirname, "../client/dist")));
+                break;
+            default:
+                throw new Error("please specify environment");
+        }
 
         Routes.forEach((route) => {
             (app as any)[route.method](
@@ -64,8 +71,8 @@ createConnection()
             );
         });
 
-        app.get("/login", (req, res) => {
-            res.sendFile(path.join(__dirname + "/public/login.html"));
+        app.get("/login", (_, res) => {
+            res.sendFile(path.join(__dirname + "public/login.html"));
         });
 
         app.post("/login", async (req, res) => {
@@ -85,17 +92,17 @@ createConnection()
                 res.redirect("/login");
             }
 
-            const expiresIn = "3m";
             const token = sign(
                 { sub: user.id, adm: user.isAdmin, iat: Date.now() },
-                fs.readFileSync(path.join(__dirname, "..", "id_rsa")),
-                { expiresIn, algorithm: "RS256" }
+                String(process.env.SECRET),
+                {
+                    expiresIn: Math.floor(Date.now() / 1000) + 60 * 60,
+                }
             );
 
             res.status(200).json({
                 success: true,
                 token: "Bearer " + token,
-                expiresIn,
             });
         });
 

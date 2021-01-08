@@ -17,7 +17,7 @@
         "express": "^4.15.4",
         "jsonwebtoken": "^8.5.1",
         "passport": "^0.4.1",
-        "passport-jwt": "^4.0.0",
+        "passport-jwt": "^3.0.1",
         "reflect-metadata": "^0.1.10",
         "sqlite3": "^5.0.0",
         "typeorm": "0.2.29"
