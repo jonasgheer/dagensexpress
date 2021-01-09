@@ -15,6 +15,7 @@
         "typescript": "3.3.3333"
     },
     "dependencies": {
+        "dayjs": "^1.10.3",
         "express": "^4.15.4",
         "jsonwebtoken": "^8.5.1",
         "passport": "^0.4.1",
@@ -25,6 +26,6 @@
         "websocket": "^1.0.33"
     },
     "scripts": {
-        "dev": "rm database.sqlite && ts-node src/index.ts"
+        "dev": "rm -f database.sqlite && ts-node src/index.ts"
     }
 }

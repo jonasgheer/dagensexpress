@@ -2,6 +2,13 @@ import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 
 type Answer = 1 | 2 | 3 | 4;
 
+export type QuestionState =
+    | "inactive"
+    | "showingQuestion"
+    | "showingGuesses"
+    | "showingAnswer"
+    | "finished";
+
 @Entity()
 export class Question {
     @PrimaryGeneratedColumn()
@@ -10,15 +17,15 @@ export class Question {
     @Column()
     text: string;
 
-    @Column("date")
-    askDate: Date;
-
     @Column()
-    active: boolean;
+    askDate: string;
 
     @Column()
     answer: Answer;
 
     @Column("simple-json")
     alternatives: { 1: string; 2: string; 3: string; 4: string };
+
+    @Column({ default: "inactive" })
+    state: QuestionState;
 }

@@ -1,5 +1,4 @@
 import * as express from "express";
-import { unlinkSync } from "fs";
 import * as http from "http";
 import * as passport from "passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
@@ -8,6 +7,7 @@ import "reflect-metadata";
 import { createConnection } from "typeorm";
 import { server } from "websocket";
 import { User } from "./entity/User";
+import hub from "./routes/hub";
 import login from "./routes/login";
 import { fillDatabaseWithTestData } from "./testdata";
 
@@ -15,18 +15,16 @@ export let wss: server;
 
 const options = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: String(process.env.SECRET),
+    secretOrKey: String(process.env.JWT_SECRET),
 };
 
 createConnection()
     .then(async (connection) => {
         passport.use(
             new Strategy(options, (jwtPayload, done) => {
-                console.log(jwtPayload);
                 connection.manager
                     .findOne(User, { where: { id: jwtPayload.sub } })
                     .then((user) => {
-                        console.log(user);
                         if (user) {
                             return done(null, user);
                         } else {
@@ -43,11 +41,13 @@ createConnection()
         app.use(passport.initialize());
 
         if (process.env.NODE_ENV === "development") {
+            console.info("JWT_SECRET:", String(process.env.JWT_SECRET));
             await fillDatabaseWithTestData(connection);
             app.use(express.static(path.join(__dirname, "../client/dist")));
         }
 
         app.use("/login", login);
+        app.use("/hub", hub);
 
         app.listen(3000);
 

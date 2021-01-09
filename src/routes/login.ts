@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
             iat: Date.now(),
             unm: user.username,
         } as Token,
-        String(process.env.SECRET),
+        String(process.env.JWT_SECRET),
         {
             expiresIn: Math.floor(Date.now() / 1000) + 60 * 60,
         }

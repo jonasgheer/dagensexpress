@@ -1,3 +1,4 @@
+import * as dayjs from "dayjs";
 import { Connection } from "typeorm";
 import { Question } from "./entity/Question";
 import { User } from "./entity/User";
@@ -19,11 +20,10 @@ export async function fillDatabaseWithTestData(connection: Connection) {
     );
     await connection.manager.save(
         connection.manager.create(Question, {
-            active: true,
             text: "What is your favourite colour?",
             answer: 3,
             alternatives: { 1: "Green", 2: "Red", 3: "Blue", 4: "Orange" },
-            askDate: Date.now(),
+            askDate: dayjs().format("DD-MM-YYYY"),
         })
     );
 }
