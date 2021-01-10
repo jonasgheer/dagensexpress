@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-type Answer = 1 | 2 | 3 | 4;
+export type Answer = 1 | 2 | 3 | 4;
 
 export type QuestionState =
     | "inactive"
@@ -8,6 +8,13 @@ export type QuestionState =
     | "showingGuesses"
     | "showingAnswer"
     | "finished";
+
+export interface Alternatives {
+    1: string;
+    2: string;
+    3: string;
+    4: string;
+}
 
 @Entity()
 export class Question {
@@ -24,7 +31,7 @@ export class Question {
     answer: Answer;
 
     @Column("simple-json")
-    alternatives: { 1: string; 2: string; 3: string; 4: string };
+    alternatives: Alternatives;
 
     @Column({ default: "inactive" })
     state: QuestionState;

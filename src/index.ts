@@ -9,6 +9,7 @@ import { server } from "websocket";
 import { User } from "./entity/User";
 import hub from "./routes/hub";
 import login from "./routes/login";
+import * as cors from "cors";
 import { fillDatabaseWithTestData } from "./testdata";
 
 export let wss: server;
@@ -38,6 +39,7 @@ createConnection()
         const app = express();
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
+        app.use(cors());
         app.use(passport.initialize());
 
         if (process.env.NODE_ENV === "development") {
@@ -48,6 +50,17 @@ createConnection()
 
         app.use("/login", login);
         app.use("/hub", hub);
+
+        // app.get(
+        //     "/user/color",
+        //     passport.authenticate("jwt", { session: false }),
+        //     async (req, res) => {
+        //         const user = await getRepository(User).findOneOrFail({
+        //             where: { id: (req.user as User).id },
+        //         });
+        //         res.json({ color: user.color });
+        //     }
+        // );
 
         app.listen(3000);
 

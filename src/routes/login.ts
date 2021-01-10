@@ -29,6 +29,7 @@ router.post("/", async (req, res) => {
             adm: user.isAdmin,
             iat: Date.now(),
             unm: user.username,
+            col: user.color,
         } as Token,
         String(process.env.JWT_SECRET),
         {

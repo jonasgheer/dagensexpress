@@ -1,3 +1,4 @@
+import { Button, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import * as React from "react";
 import { useState } from "react";
 import useFetch from "use-http";
@@ -28,31 +29,24 @@ export function Login() {
     }
 
     return (
-        <form>
-            <div>
-                <label>Username:</label>
-                <input
-                    type="text"
-                    name="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                />
-                <br />
-            </div>
-            <div>
-                <label>Password:</label>
-                <input
-                    type="password"
-                    name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-            </div>
-            <div>
-                <button type="button" onClick={submitLogin}>
-                    Submit
-                </button>
-            </div>
-        </form>
+        <FormControl id="login" maxW="300px">
+            <FormLabel>Brukernavn</FormLabel>
+            <Input
+                mb="5"
+                type="text"
+                bg="white"
+                onChange={(e) => setUsername(e.target.value)}
+            />
+            <FormLabel>Passord</FormLabel>
+            <Input
+                mb="5"
+                type="password"
+                bg="white"
+                onChange={(e) => setPassword(e.target.value)}
+            />
+            <Button w="100%" bg="white" type="button" onClick={submitLogin}>
+                Logg inn
+            </Button>
+        </FormControl>
     );
 }
