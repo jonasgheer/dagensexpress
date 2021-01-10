@@ -72,10 +72,6 @@ createConnection()
             autoAcceptConnections: process.env.NODE_ENV === "development",
         });
 
-        setTimeout(() => {
-            wss.broadcast(Date.now());
-        }, 5000);
-
         console.log(
             "Express server has started on port 3000. Open http://localhost:3000/users to see results"
         );
