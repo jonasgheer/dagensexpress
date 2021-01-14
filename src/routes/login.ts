@@ -1,4 +1,4 @@
-import express = require("express");
+import * as express from "express";
 import { sign } from "jsonwebtoken";
 import { getRepository } from "typeorm";
 import { Token } from "../../common/types";
