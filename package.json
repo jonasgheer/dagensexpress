@@ -12,7 +12,9 @@
         "@types/passport": "^1.0.5",
         "@types/passport-jwt": "^3.0.3",
         "@types/websocket": "^1.0.1",
+        "parcel": "^2.0.0-nightly.524",
         "prettier": "^2.2.1",
+        "scripty": "^2.0.0",
         "ts-node": "3.3.0",
         "typescript": "3.3.3333"
     },
@@ -29,6 +31,8 @@
         "websocket": "^1.0.33"
     },
     "scripts": {
-        "dev": "rm -f database.sqlite && ts-node src/index.ts"
+        "dev": "rm -f database.sqlite && ts-node src/index.ts",
+        "prod": "ts-node src/index.ts",
+        "buildproject": "scripty"
     }
 }
