@@ -1,0 +1,10 @@
+mkdir projectBuild
+cp -r src projectBuild/src
+cp ormconfig.json projectBuild/ormconfig.json
+cp package.json projectBuild/package.json
+cp package-lock.json projectBuild/package-lock.json
+cp -r common projectBuild/common
+
+cd client
+npm run build
+cp index.*.js index.html ../projectBuild/src/public
