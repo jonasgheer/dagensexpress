@@ -26,6 +26,7 @@
         "passport": "^0.4.1",
         "passport-jwt": "^3.0.1",
         "reflect-metadata": "^0.1.10",
+        "socket.io": "^3.1.0",
         "sqlite3": "^5.0.0",
         "typeorm": "0.2.29",
         "websocket": "^1.0.33"
@@ -33,6 +34,7 @@
     "scripts": {
         "dev": "rm -f database.sqlite && ts-node src/index.ts",
         "prod": "ts-node src/index.ts",
+        "build": "tsc",
         "buildproject": "scripty"
     }
 }

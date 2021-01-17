@@ -1,6 +1,7 @@
 import * as dayjs from "dayjs";
 import { Connection } from "typeorm";
 import { Question } from "./entity/Question";
+import { Subject } from "./entity/Subject";
 import { User } from "./entity/User";
 
 export async function fillDatabaseWithTestData(connection: Connection) {
@@ -8,12 +9,12 @@ export async function fillDatabaseWithTestData(connection: Connection) {
     const user2 = connection.manager.create(User, {
         username: "user2",
         password: "user2",
-        color: "blue.500",
+        color: "blue",
     });
     const user1 = connection.manager.create(User, {
         username: "user1",
         password: "user1",
-        color: "red.500",
+        color: "red",
     });
     await connection.manager.save(user1);
     await connection.manager.save(user2);
@@ -22,21 +23,27 @@ export async function fillDatabaseWithTestData(connection: Connection) {
             username: "admin",
             password: "admin",
             isAdmin: true,
-            color: "green.500",
+            color: "green",
         })
     );
-    const question = connection.manager.create(Question, {
+    const subject = connection.manager.create(Subject, {
+        text: "Monty Python",
+    });
+    await connection.manager.save(subject);
+    const question1 = connection.manager.create(Question, {
         text: "What is your favourite colour?",
         answer: 3,
         alternatives: { 1: "Green", 2: "Red", 3: "Blue", 4: "Orange" },
-        askDate: dayjs().format("DD-MM-YYYY"),
+        askDate: dayjs().format("YYYY-MM-DD"),
+        subject,
     });
-    await connection.manager.save(question);
-    // await connection.manager.save(
-    //     connection.manager.create(Guess, {
-    //         guess: 2,
-    //         question,
-    //         user,
-    //     })
-    // );
+    const question2 = connection.manager.create(Question, {
+        text: "When did 'Monty Python and the Holy Grail' come out?",
+        answer: 1,
+        alternatives: { 1: "1975", 2: "1979", 3: "1980", 4: "1988" },
+        askDate: dayjs().add(1, "day").format("YYYY-MM-DD"),
+        subject,
+    });
+    await connection.manager.save(question1);
+    await connection.manager.save(question2);
 }

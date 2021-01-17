@@ -1,5 +1,6 @@
 import {
     Column,
+    CreateDateColumn,
     Entity,
     ManyToOne,
     PrimaryGeneratedColumn,
@@ -22,4 +23,7 @@ export class Guess {
 
     @Column()
     guess: Answer;
+
+    @CreateDateColumn()
+    createdAt: Date;
 }

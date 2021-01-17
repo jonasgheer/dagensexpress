@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Subject } from "./Subject";
 
 export type Answer = 1 | 2 | 3 | 4;
 
@@ -24,7 +25,7 @@ export class Question {
     @Column()
     text: string;
 
-    @Column()
+    @Column({ unique: true })
     askDate: string;
 
     @Column()
@@ -32,6 +33,9 @@ export class Question {
 
     @Column("simple-json")
     alternatives: Alternatives;
+
+    @ManyToOne(() => Subject, (subject) => subject.id)
+    subject: Subject;
 
     @Column({ default: "inactive" })
     state: QuestionState;

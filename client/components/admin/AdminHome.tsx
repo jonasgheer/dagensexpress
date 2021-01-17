@@ -1,27 +1,14 @@
-import {
-    Button,
-    Container,
-    Flex,
-    Heading,
-    SimpleGrid,
-    Spinner,
-} from "@chakra-ui/react";
 import * as React from "react";
-import { useContext } from "react";
-import useFetch, { CachePolicies } from "use-http";
+import useFetch from "use-http";
 import { AdminQuizState, nextQuestionState } from "../../../common/types";
 import { Alternative } from "../Alternative";
-import { UserContext } from "../App";
 import { UserCard } from "../UserCard";
+import { Dashboard } from "./Dashboard";
 
 export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
-    const user = useContext(UserContext);
-    const { get, response, error, loading, data } = useFetch<AdminQuizState>(
-        "/hub/admin",
-        {
-            headers: { Authorization: jwt },
-            cachePolicy: CachePolicies.NO_CACHE,
-        }
+    const [page, setPage] = React.useState<"home" | "dashboard">("home");
+    const { get, error, loading, data } = useFetch<AdminQuizState>(
+        "/hub/admin"
     );
 
     React.useEffect(() => {
@@ -31,57 +18,30 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
     let mainContent: JSX.Element | null = null;
 
     if (loading) {
-        return (
-            <Flex justifyContent="center" alignItems="center">
-                <Spinner colorScheme="gray" size="xl" />;
-            </Flex>
-        );
+        return <div>loading</div>;
     }
 
     if (error) {
         return <p>noe gikk galt</p>;
     }
 
-    if (data?.type === "finished") {
-        return <p>Over for i dag</p>;
+    if (page === "dashboard") {
+        return <Dashboard onGoBack={() => setPage("home")} />;
     }
 
     if (data?.type === "nothingHere") {
         return (
-            <Flex
-                alignSelf="center"
-                justifyContent="center"
-                maxWidth="700px"
-                minWidth="90%"
-                flexDir="column"
-                textAlign="center"
-            >
-                <Heading fontStyle="italic">*trommevirvel*</Heading>
-            </Flex>
+            <div>
+                <h1 className="italic">*trommevirvel*</h1>
+            </div>
         );
     }
 
-    if (data?.type === "showingQuestion") {
+    if (data?.type === "inactive") {
         mainContent = (
-            <Flex
-                alignSelf="center"
-                justifyContent="center"
-                minWidth="900px"
-                maxWidth="90%"
-                flexDir="column"
-                textAlign="center"
-            >
-                <Container
-                    rounded="5px"
-                    fontSize="1.5rem"
-                    bg="white"
-                    p="5"
-                    mb="5"
-                    boxShadow="0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
-                >
-                    {data.text}
-                </Container>
-                <SimpleGrid columns={2} spacing={5}>
+            <div className="question">
+                <h1>{data.text}</h1>
+                <div className="alternatives">
                     {Object.entries(data.alternatives).map(([n, text]) => {
                         return (
                             <Alternative
@@ -91,42 +51,45 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
                             />
                         );
                     })}
-                </SimpleGrid>
-                <Flex>
+                </div>
+            </div>
+        );
+    }
+
+    if (data?.type === "showingQuestion") {
+        mainContent = (
+            <div className="question">
+                <h1>{data.text}</h1>
+                <div className="alternatives">
+                    {Object.entries(data.alternatives).map(([n, text]) => {
+                        return (
+                            <Alternative
+                                key={n}
+                                text={text}
+                                answer={Number(n) === data.answer}
+                            />
+                        );
+                    })}
+                </div>
+                <div>
                     {Object.entries(data.guesses).map(([username, nr]) => (
-                        <Container key={nr}>
+                        <div key={nr}>
                             {username} - {nr}
-                        </Container>
+                        </div>
                     ))}
-                </Flex>
-            </Flex>
+                </div>
+            </div>
         );
     }
 
     if (data?.type === "showingGuesses") {
         mainContent = (
-            <Flex
-                alignSelf="center"
-                justifyContent="center"
-                minWidth="900px"
-                maxWidth="90%"
-                flexDir="column"
-                textAlign="center"
-            >
-                <Container
-                    rounded="5px"
-                    fontSize="1.5rem"
-                    bg="white"
-                    p="5"
-                    mb="5"
-                    boxShadow="0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
-                >
-                    {data.text}
-                </Container>
-                <Flex alignItems="flex-end" justifyContent="space-around">
+            <div className="question">
+                <h1>{data.text}</h1>
+                <div className="alternatives-flat">
                     {Object.entries(data.alternatives).map(([n, text]) => {
                         return (
-                            <Flex key={n} direction="column" m="2">
+                            <div key={n}>
                                 {Object.entries(data.guesses)
                                     .filter(([_, nr]) => nr === Number(n))
                                     .map(([username, nr]) => (
@@ -136,57 +99,32 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
                                         />
                                     ))}
 
-                                <Container
-                                    rounded="5px"
-                                    bg={
-                                        data.answer === Number(n)
-                                            ? "green.50"
-                                            : "white"
-                                    }
-                                    p="3"
-                                    boxShadow={
-                                        user &&
-                                        Number(n) ===
-                                            data.guesses[user.username]
-                                            ? "inset 0 2px 4px 0 rgba(0,0,0,0.06)"
-                                            : "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
-                                    }
+                                <div
+                                    className={`alternative ${
+                                        Number(n) === data.answer
+                                            ? "answer-sneak-peek"
+                                            : ""
+                                    }`}
                                     key={n}
                                 >
                                     {text}
-                                </Container>
-                            </Flex>
+                                </div>
+                            </div>
                         );
                     })}
-                </Flex>
-            </Flex>
+                </div>
+            </div>
         );
     }
 
     if (data?.type === "showingAnswer") {
         mainContent = (
-            <Flex
-                alignSelf="center"
-                justifyContent="center"
-                minWidth="900px"
-                maxWidth="90%"
-                flexDir="column"
-                textAlign="center"
-            >
-                <Container
-                    rounded="5px"
-                    fontSize="1.5rem"
-                    bg="white"
-                    p="5"
-                    mb="5"
-                    boxShadow="0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
-                >
-                    {data.text}
-                </Container>
-                <Flex alignItems="flex-end" justifyContent="space-around">
+            <div className="question">
+                <h1>{data.text}</h1>
+                <div className="alternatives-flat">
                     {Object.entries(data.alternatives).map(([n, text]) => {
                         return (
-                            <Flex key={n} direction="column" m="2">
+                            <div key={n}>
                                 {Object.entries(data.guesses)
                                     .filter(([_, nr]) => nr === Number(n))
                                     .map(([username, nr]) => (
@@ -196,49 +134,33 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
                                         />
                                     ))}
 
-                                <Container
-                                    rounded="5px"
-                                    color={
-                                        data.answer === Number(n)
-                                            ? "white"
-                                            : "black"
-                                    }
-                                    fontWeight={
-                                        data.answer === Number(n)
-                                            ? "bold"
-                                            : "normal"
-                                    }
-                                    bg={
-                                        data.answer === Number(n)
-                                            ? "green.600"
-                                            : "white"
-                                    }
-                                    p="3"
-                                    boxShadow={
-                                        user &&
-                                        Number(n) ===
-                                            data.guesses[user.username]
-                                            ? "inset 0 2px 4px 0 rgba(0,0,0,0.06)"
-                                            : "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
-                                    }
+                                <div
+                                    className={`alternative ${
+                                        Number(n) === data.answer
+                                            ? "answer"
+                                            : ""
+                                    }`}
                                     key={n}
                                 >
                                     {text}
-                                </Container>
-                            </Flex>
+                                </div>
+                            </div>
                         );
                     })}
-                </Flex>
-            </Flex>
+                </div>
+            </div>
         );
     }
 
     return (
-        <main>
-            <Button
-                bg="white"
-                colorScheme="gray"
-                onClick={() =>
+        <div>
+            <button onClick={() => setPage("dashboard")}>Til dashboard</button>
+            <button
+                onClick={() => {
+                    if (!data) return;
+                    if (data.type === "nothingHere") {
+                        return;
+                    }
                     fetch(
                         `/hub/today?questionState=${
                             nextQuestionState[data.type]
@@ -249,12 +171,13 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
                                     localStorage.getItem("jwt") ?? "okey",
                             },
                         }
-                    )
-                }
+                    );
+                }}
             >
                 Gå videre
-            </Button>
-            {mainContent}
-        </main>
+            </button>
+            <p>{data?.type}</p>
+            <main>{mainContent}</main>
+        </div>
     );
 }

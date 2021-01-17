@@ -1,8 +1,8 @@
-import { Button, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import * as React from "react";
 import { useState } from "react";
 import useFetch from "use-http";
 import { App } from "./App";
+import ErrorOutlineRoundedIcon from "@material-ui/icons/ErrorOutlineRounded";
 
 export function Login() {
     const [username, setUsername] = useState("");
@@ -12,16 +12,20 @@ export function Login() {
 
     async function submitLogin() {
         const res = await post({ username, password });
-        setJwt(res.token);
-        localStorage.setItem("jwt", res.token);
+        if (response.ok) {
+            setJwt(res.token);
+            localStorage.setItem("jwt", res.token);
+        }
+    }
+
+    function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
+        if (e.key === "Enter") {
+            submitLogin();
+        }
     }
 
     if (loading) {
         return <p>Logging in...</p>;
-    }
-
-    if (error) {
-        return <p>Something went wrong</p>;
     }
 
     if (response.ok) {
@@ -29,24 +33,41 @@ export function Login() {
     }
 
     return (
-        <FormControl id="login" maxW="300px">
-            <FormLabel>Brukernavn</FormLabel>
-            <Input
-                mb="5"
-                type="text"
-                bg="white"
-                onChange={(e) => setUsername(e.target.value)}
-            />
-            <FormLabel>Passord</FormLabel>
-            <Input
-                mb="5"
-                type="password"
-                bg="white"
-                onChange={(e) => setPassword(e.target.value)}
-            />
-            <Button w="100%" bg="white" type="button" onClick={submitLogin}>
-                Logg inn
-            </Button>
-        </FormControl>
+        <>
+            <header>
+                <h1>#dagensspørsmål</h1>
+            </header>
+            <main>
+                <div>
+                    {error && (
+                        <div id="login-error">
+                            <ErrorOutlineRoundedIcon />
+                            Feil brukernavn eller passord
+                        </div>
+                    )}
+                    <form id="login">
+                        <label>
+                            Brukernavn
+                            <input
+                                onKeyUp={handleKey}
+                                type="text"
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            Passord
+                            <input
+                                onKeyUp={handleKey}
+                                type="password"
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </label>
+                        <button type="button" onClick={submitLogin}>
+                            Logg inn
+                        </button>
+                    </form>
+                </div>
+            </main>
+        </>
     );
 }

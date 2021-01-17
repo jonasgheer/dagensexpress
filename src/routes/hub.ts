@@ -1,9 +1,8 @@
 import * as dayjs from "dayjs";
 import * as express from "express";
-import { Request, Response } from "express";
-import * as passport from "passport";
+import { Response } from "express";
 import { getRepository } from "typeorm";
-import { wss } from "..";
+import { io } from "..";
 import {
     AdminQuizState,
     Guesses,
@@ -15,22 +14,16 @@ import {
 import { Guess } from "../entity/Guess";
 import { Answer, Question, QuestionState } from "../entity/Question";
 import { User } from "../entity/User";
+import { authenticate, isAdmin } from "./admin";
 
 const router = express.Router();
-
-function isAdmin(req: Request): boolean {
-    if (!req.user) return false;
-    return (req.user as User).isAdmin === true;
-}
-
-const authenticate = passport.authenticate("jwt", { session: false });
 
 /**
  * Get state of todays quiz round
  */
 router.get("/", authenticate, async (req, res: Response<QuizState>) => {
     const question = await getRepository(Question).findOne({
-        where: { askDate: dayjs().format("DD-MM-YYYY") },
+        where: { askDate: dayjs().format("YYYY-MM-DD") },
     });
 
     if (!question) {
@@ -39,8 +32,6 @@ router.get("/", authenticate, async (req, res: Response<QuizState>) => {
         } as NothingHere);
         return;
     }
-
-    // res.header("Cache-control", "no-cache");
 
     if (question.state === "inactive" || question.state === "finished") {
         res.json({
@@ -97,6 +88,21 @@ router.get("/", authenticate, async (req, res: Response<QuizState>) => {
     }
 });
 
+/**
+ *  Get this weeks subject
+ */
+router.get("/subject", authenticate, async (_, res: Response<string>) => {
+    const question = await getRepository(Question).findOne({
+        relations: ["subject"],
+        where: { askDate: dayjs().format("YYYY-MM-DD") },
+    });
+    if (!question || question.state === "inactive") {
+        res.send("*supervanskelig tema*");
+        return;
+    }
+    res.send(question.subject.text);
+});
+
 router.get(
     "/admin",
     authenticate,
@@ -105,7 +111,7 @@ router.get(
             res.sendStatus(401);
         }
         const question = await getRepository(Question).findOne({
-            where: { askDate: dayjs().format("DD-MM-YYYY") },
+            where: { askDate: dayjs().format("YYYY-MM-DD") },
         });
         if (!question) {
             res.json({
@@ -118,6 +124,9 @@ router.get(
             case "inactive":
                 res.json({
                     type: "inactive",
+                    alternatives: question.alternatives,
+                    text: question.text,
+                    answer: question.answer,
                 });
                 break;
             case "showingQuestion": {
@@ -171,7 +180,7 @@ router.get(
 router.get("/guess/:alternative", authenticate, async (req, res) => {
     const alternative = Number(req.params.alternative);
     const question = await getRepository(Question).findOne({
-        where: { askDate: dayjs().format("DD-MM-YYYY") },
+        where: { askDate: dayjs().format("YYYY-MM-DD") },
     });
 
     if (!question) {
@@ -189,7 +198,7 @@ router.get("/guess/:alternative", authenticate, async (req, res) => {
         question: question,
     });
 
-    //wss.broadcast(Date.now()); // only for admins
+    io.to("admins").emit("adminEvent", Date.now());
 
     res.json({
         type: "showingQuestion",
@@ -207,7 +216,7 @@ router.get("/today", authenticate, async (req, res) => {
     const questionState = req.query.questionState as QuestionState;
 
     const question = await getRepository(Question).findOne({
-        where: { askDate: dayjs().format("DD-MM-YYYY") },
+        where: { askDate: dayjs().format("YYYY-MM-DD") },
     });
 
     if (!question) {
@@ -228,7 +237,7 @@ router.get("/today", authenticate, async (req, res) => {
         state: questionState,
     });
 
-    wss.broadcast(Date.now());
+    io.emit("refresh", Date.now());
 
     res.sendStatus(200);
 });

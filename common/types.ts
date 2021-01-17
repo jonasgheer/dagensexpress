@@ -51,6 +51,9 @@ export interface ShowingAnswer {
 
 export interface AdminQuizInactive {
     type: "inactive";
+    text: string;
+    alternatives: Alternatives;
+    answer: Answer;
 }
 
 export interface AdminShowingQuestion {
@@ -83,4 +86,12 @@ export const nextQuestionState: Record<QuestionState, QuestionState> = {
 
 export interface Guesses {
     [key: string]: Answer;
+}
+
+export interface NewQuestion {
+    text: string;
+    askDate: string; //YYYY-MM-DD
+    answer: Answer;
+    alternatives: Alternatives;
+    subjectId: number;
 }

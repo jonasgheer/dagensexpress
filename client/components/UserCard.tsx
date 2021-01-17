@@ -1,11 +1,12 @@
-import { Container, Flex } from "@chakra-ui/react";
 import * as React from "react";
+import { UserColorContext } from "./CommonHome";
 
-export function UserCard({ username }: { username: string }) {
+export function UserCard({ username = "user" }: { username?: string }) {
+    const users = React.useContext(UserColorContext);
     return (
-        <Flex rounded="5px" mb="3" bg="white">
-            {/* <Box roundedLeft="5px" w="3" bg={color} /> */}
-            <Container>{username}</Container>
-        </Flex>
+        <div className="user-card">
+            <div style={{ backgroundColor: users[username] }} />
+            <div>{username}</div>
+        </div>
     );
 }
