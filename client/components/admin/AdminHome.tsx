@@ -29,14 +29,6 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
         return <Dashboard onGoBack={() => setPage("home")} />;
     }
 
-    if (data?.type === "nothingHere") {
-        return (
-            <div>
-                <h1 className="italic">*trommevirvel*</h1>
-            </div>
-        );
-    }
-
     if (data?.type === "inactive") {
         mainContent = (
             <div className="question">
