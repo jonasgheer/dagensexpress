@@ -24,12 +24,12 @@ router.post("/", async (req, res) => {
         {
             sub: user.id,
             adm: user.isAdmin,
-            iat: Date.now(),
+            iat: Math.floor(Date.now() / 1000),
             unm: user.username,
         } as Token,
         String(process.env.JWT_SECRET),
         {
-            expiresIn: Math.floor(Date.now() / 1000) + 60 * 60,
+            expiresIn: "4 w",
         }
     );
 
