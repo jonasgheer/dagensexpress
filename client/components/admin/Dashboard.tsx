@@ -14,7 +14,7 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     const [questionAlternative3, setQuestionAlternative3] = React.useState("");
     const [questionAlternative4, setQuestionAlternative4] = React.useState("");
     const [questionAnswer, setQuestionAnswer] = React.useState<number>();
-    const [questionSubject, setQuestionSubject] = React.useState<number>(1);
+    const [questionSubject, setQuestionSubject] = React.useState<number>();
     const [questionAskDate, setQuestionAskDate] = React.useState("");
 
     const [subjectText, setSubjectText] = React.useState("");
@@ -24,7 +24,10 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     );
     const { post: postQuestion } = useFetch("/admin/question");
 
-    const { data: subjects } = useFetch<Subject[]>("/admin/subject", []);
+    const { data: subjects, loading: loadingSubjects } = useFetch<Subject[]>(
+        "/admin/subject",
+        []
+    );
     const { data, loading } = useFetch<Question[]>("/admin/question", []);
 
     let questions = [];
@@ -42,7 +45,7 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
             )
     );
 
-    if (loading) {
+    if (loading || loadingSubjects) {
         return <p>loading...</p>;
     }
 
@@ -86,9 +89,11 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
                     Tema
                     <select
                         value={questionSubject}
-                        onChange={(e) =>
-                            setQuestionSubject(parseInt(e.target.value))
-                        }
+                        defaultValue={subjects && subjects[0].id}
+                        onChange={(e) => {
+                            console.log(e.target.value);
+                            setQuestionSubject(parseInt(e.target.value));
+                        }}
                     >
                         {subjects?.map((subject) => (
                             <option value={subject.id}>{subject.text}</option>
