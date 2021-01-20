@@ -5,6 +5,9 @@ import { Subject } from "./entity/Subject";
 import { User } from "./entity/User";
 
 export async function fillDatabaseWithTestData(connection: Connection) {
+    const [_, numUsers] = await connection.manager.findAndCount(User);
+    if (numUsers > 0) return;
+
     console.info("inserting test data...");
     const user2 = connection.manager.create(User, {
         username: "user2",
@@ -35,7 +38,6 @@ export async function fillDatabaseWithTestData(connection: Connection) {
         answer: 3,
         alternatives: { 1: "Green", 2: "Red", 3: "Blue", 4: "Orange" },
         askDate: dayjs().format("YYYY-MM-DD"),
-        subject,
     });
     const question2 = connection.manager.create(Question, {
         text: "When did 'Monty Python and the Holy Grail' come out?",
