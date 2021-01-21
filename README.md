@@ -1,7 +1,5 @@
-# Awesome Project Build with TypeORM
+# Dagensspørsmål
 
-Steps to run this project:
+The app listens on port 3000. On startup the server expects to find a `database.sqlite` file under `/app/db`, and a `JWT_SECRET` as an environment variable.
 
-1. Run `npm i` command
-2. Setup database settings inside `ormconfig.json` file
-3. Run `npm start` command
+`docker run -e "JWT_SECRET=secret" -v /home/user/db:/app/db -p 3000:3000/tcp dagensexpress:latest`
