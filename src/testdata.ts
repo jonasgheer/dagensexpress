@@ -5,9 +5,6 @@ import { Subject } from "./entity/Subject";
 import { User } from "./entity/User";
 
 export async function fillDatabaseWithTestData(connection: Connection) {
-    const [_, numUsers] = await connection.manager.findAndCount(User);
-    if (numUsers > 0) return;
-
     console.info("inserting test data...");
     const user2 = connection.manager.create(User, {
         username: "user2",

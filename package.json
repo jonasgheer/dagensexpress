@@ -29,7 +29,7 @@
     },
     "scripts": {
         "start": "node src/index.js",
-        "dev": "rm -f database.sqlite && nodemon -e ts --exec \"tsc && node build/src/index.js\"",
+        "dev": "nodemon -e ts --exec \"tsc && node build/src/index.js\"",
         "build": "tsc"
     }
 }

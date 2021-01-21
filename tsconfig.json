@@ -7,7 +7,7 @@
         "outDir": "./build",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
-        "sourceMap": true,
+        "sourceMap": false,
         "strict": true,
         "strictPropertyInitialization": false
     },
