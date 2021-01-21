@@ -55,7 +55,7 @@ createConnection()
         if (process.env.NODE_ENV === "development") {
             console.info("JWT_SECRET:", String(process.env.JWT_SECRET));
             await fillDatabaseWithTestData(connection);
-            app.use(express.static(path.join(__dirname, "../client/dist")));
+            app.use(express.static(path.join(__dirname, "../../client/dist")));
         }
 
         app.use(express.static(path.join(__dirname, "public")));
