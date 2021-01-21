@@ -29,6 +29,7 @@
         "typeorm": "0.2.29"
     },
     "scripts": {
+        "start": "node src/index.js",
         "dev": "rm -f database.sqlite && nodemon -e ts --exec \"tsc && node build/src/index.js\"",
         "build": "tsc",
         "buildproject": "scripty"
