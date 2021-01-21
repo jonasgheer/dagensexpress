@@ -14,6 +14,8 @@ import admin from "./routes/admin";
 import hub from "./routes/hub";
 import login from "./routes/login";
 import { fillDatabaseWithTestData } from "./testdata";
+import * as morgan from "morgan";
+import * as fs from "fs";
 
 export let io: Server;
 
@@ -46,7 +48,17 @@ createConnection()
         const app = express();
         const httpServer = http.createServer(app);
         io = new Server(httpServer);
+        const accessLogStream = fs.createWriteStream(
+            path.join(__dirname, "..", "logs/access.log"),
+            { flags: "a" }
+        );
 
+        app.use(
+            morgan(
+                process.env.NODE_ENV === "development" ? "dev" : "combined",
+                { stream: accessLogStream }
+            )
+        );
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
         app.use(cors());
@@ -96,7 +108,7 @@ createConnection()
 
         httpServer.listen(3000);
         console.log(
-            "Express server has started on port 3000. Open http://localhost:3000/users to see results"
+            "Express server has started on port 3000. Open http://localhost:3000 to see results"
         );
     })
     .catch((error) => console.log(error));
