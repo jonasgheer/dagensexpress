@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
         } as Token,
         String(process.env.JWT_SECRET),
         {
-            expiresIn: "4 w",
+            expiresIn: "6.5 d",
         }
     );
 

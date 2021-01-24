@@ -4,7 +4,7 @@ import useFetch from "use-http";
 import { App } from "./App";
 import ErrorOutlineRoundedIcon from "@material-ui/icons/ErrorOutlineRounded";
 
-export function Login() {
+export function Login({ onSuccess }: { onSuccess: () => void }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [jwt, setJwt] = useState();
@@ -15,6 +15,7 @@ export function Login() {
         if (response.ok) {
             setJwt(res.token);
             localStorage.setItem("jwt", res.token);
+            onSuccess();
         }
     }
 
