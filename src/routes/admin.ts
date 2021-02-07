@@ -43,14 +43,16 @@ router.post(
         const subject = await getRepository(Subject).findOne({
             where: { id: req.body.subjectId },
         });
-        await getRepository(Question).insert({
+        const newQuestion = {
             subject,
             text: req.body.text,
             alternatives: req.body.alternatives,
             answer: req.body.answer,
             askDate: req.body.askDate,
-        });
-        res.sendStatus(201);
+        };
+
+        await getRepository(Question).insert(newQuestion);
+        res.status(201).send(newQuestion);
     }
 );
 

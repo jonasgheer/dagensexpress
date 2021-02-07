@@ -1,7 +1,9 @@
+import axios from "axios";
 import dayjs from "dayjs";
 import * as React from "react";
+import { useMutation, useQuery, useQueryClient } from "react-query";
 import useFetch from "use-http";
-import { Question } from "../../../src/entity/Question";
+import { Answer, Question } from "../../../src/entity/Question";
 import { Subject } from "../../../src/entity/Subject";
 import { Dialog } from "../Dialog";
 export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
@@ -13,22 +15,46 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     const [questionAlternative2, setQuestionAlternative2] = React.useState("");
     const [questionAlternative3, setQuestionAlternative3] = React.useState("");
     const [questionAlternative4, setQuestionAlternative4] = React.useState("");
-    const [questionAnswer, setQuestionAnswer] = React.useState<number>();
+    const [questionAnswer, setQuestionAnswer] = React.useState<number>(1);
     const [questionSubject, setQuestionSubject] = React.useState<number>();
     const [questionAskDate, setQuestionAskDate] = React.useState("");
 
     const [subjectText, setSubjectText] = React.useState("");
 
+    const queryClient = useQueryClient();
+
     const { post: postSubject } = useFetch<{ subject: string }>(
         "/admin/subject"
     );
-    const { post: postQuestion } = useFetch("/admin/question");
+    // const { post: postQuestion } = useFetch("/admin/question");
 
-    const { data: subjects, loading: loadingSubjects } = useFetch<Subject[]>(
-        "/admin/subject",
-        []
+    const { mutate: postQuestion } = useMutation(
+        (question: Question) =>
+            axios.post<Question>("/admin/question", question),
+        {
+            onSuccess: ({ data }) => {
+                queryClient.setQueryData<Question[]>("questions", (old) => [
+                    ...(old ?? []),
+                    data,
+                ]);
+            },
+        }
     );
-    const { data, loading } = useFetch<Question[]>("/admin/question", []);
+
+    const { data: subjects, isLoading: loadingSubjects } = useQuery(
+        "subjects",
+        async () => {
+            const { data } = await axios.get<Subject[]>("/admin/subject");
+            if (data && data.length > 0) {
+                setQuestionSubject(data[0].id);
+            }
+            return data;
+        }
+    );
+
+    const { data, isLoading } = useQuery("questions", () =>
+        axios.get<Question[]>("/admin/question").then((res) => res.data)
+    );
 
     let questions = [];
     for (let i = 0; i < 30; i++) {
@@ -45,7 +71,7 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
             )
     );
 
-    if (loading || loadingSubjects) {
+    if (isLoading || loadingSubjects) {
         return <p>loading...</p>;
     }
 
@@ -74,13 +100,12 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
             <Dialog
                 isOpen={questionDialogOpen}
                 onClose={() => setQuestionDialogOpen(false)}
-                className="add-subject"
+                className="add-question"
             >
                 <h1>Legg til spørsmål</h1>
                 <label>
                     Spørsmål
-                    <input
-                        type="text"
+                    <textarea
                         value={questionText}
                         onChange={(e) => setQuestionText(e.target.value)}
                     />
@@ -89,7 +114,6 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
                     Tema
                     <select
                         value={questionSubject}
-                        defaultValue={subjects && subjects[0].id}
                         onChange={(e) => {
                             console.log(e.target.value);
                             setQuestionSubject(parseInt(e.target.value));
@@ -155,13 +179,14 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
                         postQuestion({
                             text: questionText,
                             askDate: questionAskDate,
-                            answer: questionAnswer,
+                            answer: questionAnswer as Answer,
                             alternatives: {
                                 1: questionAlternative1,
                                 2: questionAlternative2,
                                 3: questionAlternative3,
                                 4: questionAlternative4,
                             },
+                            // @ts-ignore
                             subjectId: questionSubject,
                         });
                         setQuestionDialogOpen(false);

@@ -30,11 +30,16 @@ export async function fillDatabaseWithTestData(connection: Connection) {
         text: "Monty Python",
     });
     await connection.manager.save(subject);
+    const subject2 = connection.manager.create(Subject, {
+        text: "Fruit",
+    });
+    await connection.manager.save(subject2);
     const question1 = connection.manager.create(Question, {
         text: "What is your favourite colour?",
         answer: 3,
         alternatives: { 1: "Green", 2: "Red", 3: "Blue", 4: "Orange" },
         askDate: dayjs().format("YYYY-MM-DD"),
+        subject,
     });
     const question2 = connection.manager.create(Question, {
         text: "When did 'Monty Python and the Holy Grail' come out?",

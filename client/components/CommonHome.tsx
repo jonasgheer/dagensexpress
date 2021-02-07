@@ -1,3 +1,4 @@
+import axios from "axios";
 import * as React from "react";
 import { io } from "socket.io-client";
 import useFetch from "use-http";
@@ -30,6 +31,8 @@ export function CommonHome({
     );
 
     React.useEffect(() => {
+        axios.defaults.headers.common["Authorization"] = jwt;
+
         socket.emit("token", jwt);
 
         socket.on("message", (m: string) => {
