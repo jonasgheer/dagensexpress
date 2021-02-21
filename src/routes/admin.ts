@@ -2,6 +2,7 @@ import * as express from "express";
 import { Request, Response } from "express";
 import * as passport from "passport";
 import { getRepository } from "typeorm";
+import { onlineUsers } from "..";
 import { NewQuestion } from "../../common/types";
 import { Question } from "../entity/Question";
 import { Subject } from "../entity/Subject";
@@ -75,6 +76,19 @@ router.get("/subject", authenticate, async (req, res: Response<Subject[]>) => {
 
     const subjects = await getRepository(Subject).find();
     res.send(subjects);
+});
+
+router.get("/online-users", authenticate, async (_, res) => {
+    const users: { userId: number; userName: string }[] = [];
+    onlineUsers.forEach(({ timestamp, userName, userId }) => {
+        if (Date.now() - timestamp > 6000) {
+            onlineUsers.delete(Number(userId));
+        } else {
+            users.push({ userId, userName });
+        }
+    });
+
+    return res.send(users);
 });
 
 export default router;

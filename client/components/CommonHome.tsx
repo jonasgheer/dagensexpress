@@ -46,6 +46,13 @@ export function CommonHome({
         socket.on("refresh", (time: number) => {
             setLastServerUpdate(time);
         });
+
+        if (!user?.isAdmin) {
+            setInterval(
+                () => socket.emit("ping", user?.userId, user?.username),
+                5000
+            );
+        }
     }, []);
 
     const home = isAdmin ? (

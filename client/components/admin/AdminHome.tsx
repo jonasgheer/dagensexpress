@@ -11,8 +11,13 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
         "/hub/admin"
     );
 
+    const { get: getOnlineUsers, data: onlineUsers } = useFetch(
+        "/admin/online-users"
+    );
+
     React.useEffect(() => {
         get();
+        setInterval(getOnlineUsers, 5000);
     }, [refresh]);
 
     let mainContent: JSX.Element | null = null;
@@ -170,6 +175,12 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
             </button>
             <p>{data?.type}</p>
             <main>{mainContent}</main>
+            {onlineUsers &&
+                onlineUsers.map(
+                    (user: { userId: number; userName: string }) => (
+                        <p key={user.userId}>{user.userName}</p>
+                    )
+                )}
         </div>
     );
 }

@@ -19,6 +19,13 @@ import * as fs from "fs";
 
 export let io: Server;
 
+type userId = number;
+
+export let onlineUsers = new Map<
+    userId,
+    { timestamp: number; userId: userId; userName: string }
+>();
+
 const options = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: String(process.env.JWT_SECRET),
@@ -97,6 +104,21 @@ createConnection()
 
         io.on("connection", (socket) => {
             socket.emit("message", "Hello, Client!");
+
+            socket.on("ping", (userId: number, userName: string) => {
+                if (!onlineUsers.has(userId)) {
+                    onlineUsers.set(userId, {
+                        timestamp: Date.now(),
+                        userId,
+                        userName,
+                    });
+                }
+                onlineUsers.set(userId, {
+                    timestamp: Date.now(),
+                    userId,
+                    userName,
+                });
+            });
 
             socket.on("token", (token: string) => {
                 const decoded = jwt.decode(token.split(" ")[1]) as Token;
