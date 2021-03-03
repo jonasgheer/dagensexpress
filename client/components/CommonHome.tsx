@@ -48,6 +48,7 @@ export function CommonHome({
         });
 
         if (!user?.isAdmin) {
+            socket.emit("ping", user?.userId, user?.username);
             setInterval(
                 () => socket.emit("ping", user?.userId, user?.username),
                 5000
