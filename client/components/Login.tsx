@@ -1,22 +1,32 @@
 import * as React from "react";
 import { useState } from "react";
-import useFetch from "use-http";
 import { App } from "./App";
 import ErrorOutlineRoundedIcon from "@material-ui/icons/ErrorOutlineRounded";
+import axios from "axios";
 
 export function Login({ onSuccess }: { onSuccess: () => void }) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [jwt, setJwt] = useState();
-    const { post, response, loading, error } = useFetch("/login");
+    const [jwt, setJwt] = useState<string>();
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [isError, setIsError] = useState(false);
 
     async function submitLogin() {
-        const res = await post({ username, password });
-        if (response.ok) {
-            setJwt(res.token);
-            localStorage.setItem("jwt", res.token);
-            onSuccess();
-        }
+        setIsLoading(true);
+        axios
+            .post<{ token: string }>("/login", {
+                username,
+                password,
+            })
+            .then((res) => {
+                setJwt(res.data.token);
+                localStorage.setItem("jwt", res.data.token);
+                onSuccess();
+                setIsSuccess(true);
+            })
+            .catch(() => setIsError(true))
+            .finally(() => setIsLoading(false));
     }
 
     function handleKey(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -25,11 +35,11 @@ export function Login({ onSuccess }: { onSuccess: () => void }) {
         }
     }
 
-    if (loading) {
+    if (isLoading) {
         return <p>Logging in...</p>;
     }
 
-    if (response.ok) {
+    if (isSuccess) {
         return <App token={jwt} />;
     }
 
@@ -40,7 +50,7 @@ export function Login({ onSuccess }: { onSuccess: () => void }) {
             </header>
             <main>
                 <div>
-                    {error && (
+                    {isError && (
                         <div id="login-error">
                             <ErrorOutlineRoundedIcon />
                             Feil brukernavn eller passord

@@ -1,9 +1,8 @@
-import axios from "axios";
 import * as React from "react";
+import { useQuery, useQueryClient } from "react-query";
 import { io } from "socket.io-client";
-import useFetch from "use-http";
 import { AdminHome } from "./admin/AdminHome";
-import { UserContext } from "./App";
+import { ax, UserContext } from "./App";
 import { UserHome } from "./user/UserHome";
 import { UserCard } from "./UserCard";
 
@@ -20,18 +19,24 @@ export function CommonHome({
     jwt: string;
     isAdmin: boolean;
 }) {
+    const queryClient = useQueryClient();
     const user = React.useContext(UserContext);
-    const [lastServerUpdate, setLastServerUpdate] = React.useState(0);
-    const { data, loading } = useFetch<string>("/hub/subject", [
-        lastServerUpdate,
-    ]);
-    const { data: usersData, loading: loadingUsers } = useFetch(
-        "/user/color",
-        []
+    const { data, isLoading } = useQuery<string>("subject", () =>
+        ax
+            .get<string>("/hub/subject", { headers: { Authorization: jwt } })
+            .then((res) => res.data)
+    );
+
+    const { data: usersData, isLoading: loadingUsers } = useQuery(
+        "userColor",
+        () =>
+            ax
+                .get("/user/color", { headers: { Authorization: jwt } })
+                .then((res) => res.data)
     );
 
     React.useEffect(() => {
-        axios.defaults.headers.common["Authorization"] = jwt;
+        ax.defaults.headers.common["Authorization"] = jwt;
 
         socket.emit("token", jwt);
 
@@ -39,12 +44,8 @@ export function CommonHome({
             console.log(m);
         });
 
-        socket.on("adminEvent", (time: number) => {
-            setLastServerUpdate(time);
-        });
-
-        socket.on("refresh", (time: number) => {
-            setLastServerUpdate(time);
+        socket.on("invalidate", (key: string) => {
+            queryClient.invalidateQueries(key);
         });
 
         if (!user?.isAdmin) {
@@ -57,10 +58,10 @@ export function CommonHome({
     }, []);
 
     const home = isAdmin ? (
-        <AdminHome refresh={lastServerUpdate} jwt={jwt} />
+        <AdminHome />
     ) : (
         <main>
-            <UserHome refresh={lastServerUpdate} />
+            <UserHome />
         </main>
     );
 
@@ -75,7 +76,7 @@ export function CommonHome({
                 {user && <UserCard username={user?.username} />}
             </header>
             <div className="subject">
-                <h1>{loading ? "loading..." : data}</h1>
+                <h1>{isLoading ? "loading..." : data}</h1>
             </div>
             {home}
         </UserColorContext.Provider>

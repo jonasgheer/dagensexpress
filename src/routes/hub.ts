@@ -198,7 +198,7 @@ router.get("/guess/:alternative", authenticate, async (req, res) => {
         question: question,
     });
 
-    io.to("admins").emit("adminEvent", Date.now());
+    io.to("admins").emit("invalidate", "adminQuizState");
 
     res.json({
         type: "showingQuestion",
@@ -237,7 +237,8 @@ router.get("/today", authenticate, async (req, res) => {
         state: questionState,
     });
 
-    io.emit("refresh", Date.now());
+    io.emit("invalidate", "quizState");
+    if (nextState === "showingQuestion") io.emit("invalidate", "subject");
 
     res.sendStatus(200);
 });

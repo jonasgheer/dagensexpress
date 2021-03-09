@@ -1,28 +1,28 @@
 import * as React from "react";
-import useFetch from "use-http";
+import { useQuery, useQueryClient } from "react-query";
 import { AdminQuizState, nextQuestionState } from "../../../common/types";
 import { Alternative } from "../Alternative";
+import { ax } from "../App";
 import { UserCard } from "../UserCard";
 import { Dashboard } from "./Dashboard";
 
-export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
+export function AdminHome() {
     const [page, setPage] = React.useState<"home" | "dashboard">("home");
-    const { get, error, loading, data } = useFetch<AdminQuizState>(
-        "/hub/admin"
+    const { error, isLoading, data } = useQuery<AdminQuizState>(
+        "adminQuizState",
+        () => ax.get("/hub/admin").then((res) => res.data)
     );
+    const queryClient = useQueryClient();
 
-    const { get: getOnlineUsers, data: onlineUsers } = useFetch(
-        "/admin/online-users"
+    const { data: onlineUsers } = useQuery(
+        "onlineUsers",
+        () => ax.get("/admin/online-users").then((res) => res.data),
+        { refetchInterval: 5000 }
     );
-
-    React.useEffect(() => {
-        get();
-        setInterval(getOnlineUsers, 5000);
-    }, [refresh]);
 
     let mainContent: JSX.Element | null = null;
 
-    if (loading) {
+    if (isLoading) {
         return <div>loading</div>;
     }
 
@@ -168,6 +168,8 @@ export function AdminHome({ refresh, jwt }: { refresh: number; jwt: string }) {
                                     localStorage.getItem("jwt") ?? "okey",
                             },
                         }
+                    ).then(() =>
+                        queryClient.invalidateQueries("adminQuizState")
                     );
                 }}
             >

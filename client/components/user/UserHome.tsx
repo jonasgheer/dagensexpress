@@ -1,17 +1,39 @@
 import * as React from "react";
-import useFetch from "use-http";
+import { useQuery, useMutation, useQueryClient } from "react-query";
 import { QuizState } from "../../../common/types";
+import { Answer } from "../../../src/entity/Question";
 import { Alternative, AlternativeState } from "../Alternative";
+import { ax } from "../App";
 import { UserCard } from "../UserCard";
 
-export function UserHome({ refresh }: { refresh: number }) {
-    const { get, loading, data } = useFetch<QuizState>("/hub", [refresh]);
+export function UserHome() {
+    const queryClient = useQueryClient();
+    const { isLoading, data } = useQuery<QuizState>("quizState", () =>
+        ax.get("/hub").then((res) => res.data)
+    );
+
+    const { mutate } = useMutation(
+        (alternative: number) => ax.get(`/hub/guess/${alternative}`),
+        {
+            onMutate: async (alternative: Answer) => {
+                await queryClient.cancelQueries("quizState");
+                const prevState = queryClient.getQueryData<QuizState>(
+                    "quizState"
+                );
+                queryClient.setQueryData("quizState", {
+                    ...prevState,
+                    haveGuessed: alternative,
+                });
+            },
+            onSettled: () => queryClient.invalidateQueries("quizState"),
+        }
+    );
 
     async function submitGuess(alternative: number) {
-        await get(`/guess/${alternative}`);
+        await mutate(alternative as Answer);
     }
 
-    if (loading) {
+    if (isLoading) {
         return <div>loading...</div>;
     }
 
@@ -111,5 +133,5 @@ export function UserHome({ refresh }: { refresh: number }) {
             </div>
         );
     }
-    return <p>{data?.type}</p>;
+    return null;
 }

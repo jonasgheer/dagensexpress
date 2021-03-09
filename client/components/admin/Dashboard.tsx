@@ -1,10 +1,9 @@
-import axios from "axios";
 import dayjs from "dayjs";
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import useFetch from "use-http";
 import { Answer, Question } from "../../../src/entity/Question";
 import { Subject } from "../../../src/entity/Subject";
+import { ax } from "../App";
 import { Dialog } from "../Dialog";
 export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     const [subjectDialogOpen, setSubjectDialogOpen] = React.useState(false);
@@ -23,14 +22,20 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
 
     const queryClient = useQueryClient();
 
-    const { post: postSubject } = useFetch<{ subject: string }>(
-        "/admin/subject"
+    const subjectMutation = useMutation(
+        (subject: { subject: string }) => ax.post("/admin/subject", subject),
+        {
+            onSuccess: ({ data }) => {
+                queryClient.setQueryData<{ subject: string }[]>(
+                    "subjects",
+                    (old) => [...(old ?? []), data]
+                );
+            },
+        }
     );
-    // const { post: postQuestion } = useFetch("/admin/question");
 
     const { mutate: postQuestion } = useMutation(
-        (question: Question) =>
-            axios.post<Question>("/admin/question", question),
+        (question: Question) => ax.post<Question>("/admin/question", question),
         {
             onSuccess: ({ data }) => {
                 queryClient.setQueryData<Question[]>("questions", (old) => [
@@ -44,7 +49,7 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     const { data: subjects, isLoading: loadingSubjects } = useQuery(
         "subjects",
         async () => {
-            const { data } = await axios.get<Subject[]>("/admin/subject");
+            const { data } = await ax.get<Subject[]>("/admin/subject");
             if (data && data.length > 0) {
                 setQuestionSubject(data[0].id);
             }
@@ -53,7 +58,7 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     );
 
     const { data, isLoading } = useQuery("questions", () =>
-        axios.get<Question[]>("/admin/question").then((res) => res.data)
+        ax.get<Question[]>("/admin/question").then((res) => res.data)
     );
 
     let questions = [];
@@ -90,7 +95,7 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
                 />
                 <button
                     onClick={() => {
-                        postSubject({ subject: subjectText });
+                        subjectMutation.mutate({ subject: subjectText });
                         setSubjectDialogOpen(false);
                     }}
                 >

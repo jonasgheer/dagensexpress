@@ -24,7 +24,7 @@ export function Alternative({
                 onClose={() => setDialogIsOpen(false)}
             >
                 <h1>Er du sikker?</h1>
-                <button onClick={onSubmit}>
+                <button onClick={() => onSubmit?.() && setDialogIsOpen(false)}>
                     Aldri vært så sikker i mitt liv!
                 </button>
             </Dialog>
