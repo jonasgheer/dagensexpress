@@ -17,10 +17,8 @@ WORKDIR /app
 COPY --from=0 /app/package.* ./
 RUN npm install --only=production
 COPY --from=0 /app/build ./
-COPY public ./public
-COPY --from=0 /app/client/index.html ./public
-COPY --from=0 /app/client/index.*.js ./public
-COPY --from=0 /app/client/index.*.css ./public
+# COPY public ./public
+COPY --from=0 /app/client/public ./public
 
 ENV NODE_ENV=production
 ENV TYPEORM_CONNECTION=sqlite

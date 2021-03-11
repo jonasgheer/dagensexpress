@@ -74,7 +74,14 @@ createConnection()
         if (process.env.NODE_ENV === "development") {
             console.info("JWT_SECRET:", String(process.env.JWT_SECRET));
             await fillDatabaseWithTestData(connection);
-            app.use(express.static(path.join(__dirname, "../../client/dist")));
+            app.use(
+                express.static(path.join(__dirname, "../../client/public"))
+            );
+            app.use(
+                express.static(
+                    path.join(__dirname, "../../client/public/build")
+                )
+            );
         }
 
         app.use(express.static(path.join(__dirname, "..", "public")));
@@ -101,6 +108,10 @@ createConnection()
                 );
             }
         );
+
+        app.get("/hello", (_, res) => {
+            res.send("hello");
+        });
 
         io.on("connection", (socket) => {
             socket.emit("message", "Hello, Client!");
