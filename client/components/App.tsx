@@ -35,13 +35,19 @@ export function App({ token }: { token?: string }) {
         ax = axios.create({
             headers: { Authorization: jwt },
         });
-        ax.interceptors.response.use((response) => {
-            if (response.status === 401) {
-                localStorage.removeItem("jwt");
-                setTokenExpired(true);
+        ax.interceptors.response.use(
+            (response) => {
+                return response;
+            },
+            (error) => {
+                if (error.response.status === 401) {
+                    localStorage.removeItem("jwt");
+                    setTokenExpired(true);
+                } else {
+                    return Promise.reject(error);
+                }
             }
-            return response;
-        });
+        );
     }
 
     const decoded = jwtDecode<Token>(jwt.split(" ")[1]);
