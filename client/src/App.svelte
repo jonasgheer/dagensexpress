@@ -4,7 +4,8 @@
         QueryClientProvider,
     } from "@sveltestack/svelte-query";
     import { jwt } from "./store";
-    import Login from "./Login.svelte";
+    import Login from "./auth/Login.svelte";
+    import CommonHome from "./CommonHome.svelte";
 
     const queryClient = new QueryClient();
 
@@ -15,6 +16,6 @@
     <Login />
 {:else}
     <QueryClientProvider client={queryClient}>
-        <div>hello</div>
+        <CommonHome />
     </QueryClientProvider>
 {/if}

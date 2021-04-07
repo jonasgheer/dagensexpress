@@ -1,7 +1,7 @@
 <script lang="ts">
     import AlertCircleOutline from "svelte-material-icons/AlertCircleOutline.svelte";
     import axios from "axios";
-    import { jwt } from "./store";
+    import { jwt } from "../store";
 
     let username = "";
     let password = "";
