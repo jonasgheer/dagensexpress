@@ -43,6 +43,7 @@ export function App({ token }: { token?: string }) {
                 if (error.response.status === 401) {
                     localStorage.removeItem("jwt");
                     setTokenExpired(true);
+                    location.reload();
                 } else {
                     return Promise.reject(error);
                 }
