@@ -4,13 +4,26 @@ import { AdminQuizState, nextQuestionState } from "../../../common/types";
 import { Alternative } from "../Alternative";
 import { ax } from "../App";
 import { UserCard } from "../UserCard";
-import { Dashboard } from "./Dashboard";
+import { Grid, Stepper } from "@mantine/core";
+
+function stepperValue(questionState?: AdminQuizState["type"]) {
+    if (!questionState || questionState === "nothingHere") return 0;
+
+    const questionStateMap = {
+        inactive: 1,
+        showingQuestion: 2,
+        showingGuesses: 3,
+        showingAnswer: 4,
+        finished: 5,
+    };
+
+    return questionStateMap[questionState];
+}
 
 export function AdminHome() {
-    const [page, setPage] = React.useState<"home" | "dashboard">("home");
-    const { error, isLoading, data } = useQuery<AdminQuizState>(
-        "adminQuizState",
-        () => ax.get("/hub/admin").then((res) => res.data)
+    const [hideAnswer, setHideAnswer] = React.useState(true);
+    const { error, isLoading, data } = useQuery("adminQuizState", () =>
+        ax.get<AdminQuizState>("/hub/admin").then((res) => res.data)
     );
     const queryClient = useQueryClient();
 
@@ -30,10 +43,6 @@ export function AdminHome() {
         return <p>noe gikk galt</p>;
     }
 
-    if (page === "dashboard") {
-        return <Dashboard onGoBack={() => setPage("home")} />;
-    }
-
     if (data?.type === "inactive") {
         mainContent = (
             <div className="question">
@@ -44,7 +53,9 @@ export function AdminHome() {
                             <Alternative
                                 key={n}
                                 text={text}
-                                answer={Number(n) === data.answer}
+                                answer={
+                                    !hideAnswer && Number(n) === data.answer
+                                }
                             />
                         );
                     })}
@@ -63,7 +74,9 @@ export function AdminHome() {
                             <Alternative
                                 key={n}
                                 text={text}
-                                answer={Number(n) === data.answer}
+                                answer={
+                                    !hideAnswer && Number(n) === data.answer
+                                }
                             />
                         );
                     })}
@@ -98,7 +111,7 @@ export function AdminHome() {
 
                                 <div
                                     className={`alternative ${
-                                        Number(n) === data.answer
+                                        !hideAnswer && Number(n) === data.answer
                                             ? "answer-sneak-peek"
                                             : ""
                                     }`}
@@ -133,7 +146,7 @@ export function AdminHome() {
 
                                 <div
                                     className={`alternative ${
-                                        Number(n) === data.answer
+                                        Number(n) === data.answer && !hideAnswer
                                             ? "answer"
                                             : ""
                                     }`}
@@ -149,40 +162,92 @@ export function AdminHome() {
         );
     }
 
+    if (data?.type === "nothingHere") {
+        mainContent = (
+            <div>
+                <p>Fant ingen spørsmål for i dag</p>
+            </div>
+        );
+    }
+
+    if (data?.type === "finished") {
+        mainContent = (
+            <div>
+                <p>Dagensspørsmål er over for i dag</p>
+            </div>
+        );
+    }
+
     return (
-        <div>
-            <button onClick={() => setPage("dashboard")}>Til dashboard</button>
-            <button
-                onClick={() => {
-                    if (!data) return;
-                    if (data.type === "nothingHere") {
-                        return;
-                    }
-                    fetch(
-                        `/hub/today?questionState=${
-                            nextQuestionState[data.type]
-                        }`,
-                        {
-                            headers: {
-                                Authorization:
-                                    localStorage.getItem("jwt") ?? "okey",
-                            },
+        <div className="adminhome-main">
+            <Grid>
+                <Grid.Col span={4}>
+                    <button
+                        className={"progress btn"}
+                        onClick={() => {
+                            if (!data) return;
+                            if (data.type === "nothingHere") {
+                                return;
+                            }
+                            fetch(
+                                `/hub/today?questionState=${
+                                    nextQuestionState[data.type]
+                                }`,
+                                {
+                                    headers: {
+                                        Authorization:
+                                            localStorage.getItem("jwt") ??
+                                            "okey",
+                                    },
+                                }
+                            ).then(() =>
+                                queryClient.invalidateQueries("adminQuizState")
+                            );
+                        }}
+                        disabled={
+                            data?.type === "nothingHere" ||
+                            data?.type === "finished"
                         }
-                    ).then(() =>
-                        queryClient.invalidateQueries("adminQuizState")
-                    );
-                }}
-            >
-                Gå videre
-            </button>
-            <p>{data?.type}</p>
-            <main>{mainContent}</main>
-            {onlineUsers &&
-                onlineUsers.map(
-                    (user: { userId: number; userName: string }) => (
-                        <p key={user.userId}>{user.userName}</p>
-                    )
-                )}
+                    >
+                        Gå videre
+                    </button>
+                    <Stepper
+                        active={stepperValue(data?.type)}
+                        orientation={"vertical"}
+                    >
+                        <Stepper.Step label={"Inaktiv"} />
+                        <Stepper.Step label={"Viser spørsmål"} />
+                        <Stepper.Step label={"Viser gjetninger"} />
+                        <Stepper.Step label={"Viser svaret"} />
+                        <Stepper.Step label={"Ferdig"} />
+                    </Stepper>
+                </Grid.Col>
+                <Grid.Col className="adminhome-main-center" span={4}>
+                    <main>{mainContent}</main>
+                </Grid.Col>
+                <Grid.Col span={4} className={"adminhome-main-right"}>
+                    <label className="hide-toggle">
+                        Skjul svar
+                        <input
+                            type="checkbox"
+                            checked={hideAnswer}
+                            onChange={() => setHideAnswer((p) => !p)}
+                        />
+                    </label>
+                    {onlineUsers && (
+                        <div className="online-users">
+                            {onlineUsers.map(
+                                (user: {
+                                    userId: number;
+                                    userName: string;
+                                }) => (
+                                    <p key={user.userId}>{user.userName}</p>
+                                )
+                            )}
+                        </div>
+                    )}
+                </Grid.Col>
+            </Grid>
         </div>
     );
 }

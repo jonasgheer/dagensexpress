@@ -10,7 +10,7 @@ import { User } from "../entity/User";
 
 export function isAdmin(req: Request): boolean {
     if (!req.user) return false;
-    return (req.user as User).isAdmin === true;
+    return (req.user as User).isAdmin;
 }
 
 export const authenticate = passport.authenticate("jwt", { session: false });
@@ -41,6 +41,9 @@ router.post(
     "/question",
     authenticate,
     async (req: Request<{}, {}, NewQuestion>, res) => {
+        if (!isAdmin(req)) {
+            res.sendStatus(401);
+        }
         const subject = await getRepository(Subject).findOne({
             where: { id: req.body.subjectId },
         });
@@ -56,6 +59,34 @@ router.post(
         res.status(201).send(newQuestion);
     }
 );
+
+router.put("/question/:id", authenticate, async (req, res) => {
+    if (!isAdmin(req)) {
+        res.sendStatus(401);
+    }
+    const question = await getRepository(Question).findOne({
+        where: { id: req.params.id },
+    });
+    if (!question || question?.state !== "inactive") {
+        res.sendStatus(400);
+        return;
+    }
+    const subject = await getRepository(Subject).findOne({
+        where: { id: req.body.subjectId },
+    });
+
+    const editedQuestion = {
+        subject: subject,
+        text: req.body.text,
+        alternatives: req.body.alternatives,
+        answer: req.body.answer,
+        askDate: req.body.askDate,
+    };
+
+    await getRepository(Question).update(req.params.id, editedQuestion);
+
+    res.status(201).send(editedQuestion);
+});
 
 router.post("/subject", authenticate, async (req, res) => {
     if (!isAdmin(req)) {
@@ -78,7 +109,10 @@ router.get("/subject", authenticate, async (req, res: Response<Subject[]>) => {
     res.send(subjects);
 });
 
-router.get("/online-users", authenticate, async (_, res) => {
+router.get("/online-users", authenticate, async (req, res) => {
+    if (!isAdmin(req)) {
+        res.sendStatus(401);
+    }
     const users: { userId: number; userName: string }[] = [];
     onlineUsers.forEach(({ timestamp, userName, userId }) => {
         if (Date.now() - timestamp > 6000) {
@@ -89,6 +123,28 @@ router.get("/online-users", authenticate, async (_, res) => {
     });
 
     return res.send(users);
+});
+
+router.get("/users", authenticate, async (req, res) => {
+    if (!isAdmin(req)) {
+        res.sendStatus(401);
+    }
+    const users = await getRepository(User).find({
+        select: ["id", "username", "isAdmin"],
+    });
+    return res.send(users);
+});
+
+router.post("/user", authenticate, async (req, res) => {
+    if (!isAdmin(req)) {
+        res.sendStatus(401);
+    }
+
+    await getRepository(User).insert({
+        username: req.body.username,
+        password: req.body.password,
+        color: req.body.color,
+    });
 });
 
 export default router;

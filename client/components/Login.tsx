@@ -73,7 +73,11 @@ export function Login({ onSuccess }: { onSuccess: () => void }) {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </label>
-                        <button type="button" onClick={submitLogin}>
+                        <button
+                            type="button"
+                            className="btn"
+                            onClick={submitLogin}
+                        >
                             Logg inn
                         </button>
                     </form>

@@ -18,7 +18,13 @@ export const ModalContext = React.createContext<{
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 } | null>(null);
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            refetchOnWindowFocus: false
+        }
+    }
+});
 
 export let ax: AxiosInstance;
 

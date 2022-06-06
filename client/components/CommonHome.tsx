@@ -5,6 +5,10 @@ import { AdminHome } from "./admin/AdminHome";
 import { ax, UserContext } from "./App";
 import { UserHome } from "./user/UserHome";
 import { UserCard } from "./UserCard";
+import { HashRouter, Link, Route, Routes } from "react-router-dom";
+import { Dashboard } from "./admin/Dashboard";
+import { Users } from "./admin/Users";
+import { CreateNewUserDialog } from "./dialogs/CreateNewUserDialog";
 
 const socket = io();
 
@@ -71,14 +75,36 @@ export function CommonHome({
 
     return (
         <UserColorContext.Provider value={usersData}>
-            <header>
-                <h1>#dagensspørsmål</h1>
-                {user && <UserCard username={user?.username} />}
-            </header>
-            <div className="subject">
-                <h1>{isLoading ? "loading..." : data}</h1>
-            </div>
-            {home}
+            <HashRouter>
+                <header>
+                    <h1>
+                        {isAdmin ? (
+                            <Link to="/">#dagensspørsmål</Link>
+                        ) : (
+                            "#dagensspørsmål"
+                        )}
+                    </h1>
+                    {isAdmin && (
+                        <>
+                            <Link to="/questions">Spørsmål</Link>
+                            <Link to="/users">Deltagere</Link>
+                        </>
+                    )}
+                    {user && <UserCard username={user?.username} />}
+                </header>
+                <div className="subject">
+                    <h1>{isLoading ? "loading..." : data}</h1>
+                </div>
+                <Routes>
+                    <Route path="/" element={home} />
+                    <Route path="/questions" element={<Dashboard />} />
+                    <Route path="/users" element={<Users />} />
+                    <Route
+                        path="/create-user"
+                        element={<CreateNewUserDialog />}
+                    />
+                </Routes>
+            </HashRouter>
         </UserColorContext.Provider>
     );
 }

@@ -1,21 +1,21 @@
 import dayjs from "dayjs";
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "react-query";
-import { Answer, Question } from "../../../src/entity/Question";
+import { Question } from "../../../src/entity/Question";
 import { Subject } from "../../../src/entity/Subject";
 import { ax } from "../App";
 import { Dialog } from "../Dialog";
-export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
+import { QuestionDialog } from "./QuestionDialog";
+
+export function Dashboard() {
     const [subjectDialogOpen, setSubjectDialogOpen] = React.useState(false);
     const [questionDialogOpen, setQuestionDialogOpen] = React.useState(false);
-
-    const [questionText, setQuestionText] = React.useState("");
-    const [questionAlternative1, setQuestionAlternative1] = React.useState("");
-    const [questionAlternative2, setQuestionAlternative2] = React.useState("");
-    const [questionAlternative3, setQuestionAlternative3] = React.useState("");
-    const [questionAlternative4, setQuestionAlternative4] = React.useState("");
-    const [questionAnswer, setQuestionAnswer] = React.useState<number>(1);
-    const [questionSubject, setQuestionSubject] = React.useState<number>();
+    const [questionDialogMode, setQuestionDialogMode] = React.useState<
+        "add" | "edit"
+    >("add");
+    const [selectedQuestion, setSelectedQuestion] = React.useState<
+        Question | undefined
+    >();
     const [questionAskDate, setQuestionAskDate] = React.useState("");
 
     const [subjectText, setSubjectText] = React.useState("");
@@ -34,25 +34,10 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
         }
     );
 
-    const { mutate: postQuestion } = useMutation(
-        (question: Question) => ax.post<Question>("/admin/question", question),
-        {
-            onSuccess: ({ data }) => {
-                queryClient.setQueryData<Question[]>("questions", (old) => [
-                    ...(old ?? []),
-                    data,
-                ]);
-            },
-        }
-    );
-
     const { data: subjects, isLoading: loadingSubjects } = useQuery(
         "subjects",
         async () => {
             const { data } = await ax.get<Subject[]>("/admin/subject");
-            if (data && data.length > 0) {
-                setQuestionSubject(data[0].id);
-            }
             return data;
         }
     );
@@ -94,144 +79,67 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
                     onChange={(e) => setSubjectText(e.target.value)}
                 />
                 <button
+                    className="btn"
                     onClick={() => {
                         subjectMutation.mutate({ subject: subjectText });
                         setSubjectDialogOpen(false);
+                        setSubjectText("");
                     }}
                 >
-                    Send
+                    Lagre
                 </button>
             </Dialog>
-            <Dialog
-                isOpen={questionDialogOpen}
-                onClose={() => setQuestionDialogOpen(false)}
-                className="add-question"
-            >
-                <h1>Legg til spørsmål</h1>
-                <label>
-                    Spørsmål
-                    <textarea
-                        value={questionText}
-                        onChange={(e) => setQuestionText(e.target.value)}
-                    />
-                </label>
-                <label>
-                    Tema
-                    <select
-                        value={questionSubject}
-                        onChange={(e) => {
-                            console.log(e.target.value);
-                            setQuestionSubject(parseInt(e.target.value));
-                        }}
-                    >
-                        {subjects?.map((subject) => (
-                            <option value={subject.id}>{subject.text}</option>
-                        ))}
-                    </select>
-                </label>
-                <label>
-                    Alt1
-                    <input
-                        type="text"
-                        value={questionAlternative1}
-                        onChange={(e) =>
-                            setQuestionAlternative1(e.target.value)
-                        }
-                    />
-                </label>
-                <label>
-                    Alt2
-                    <input
-                        type="text"
-                        value={questionAlternative2}
-                        onChange={(e) =>
-                            setQuestionAlternative2(e.target.value)
-                        }
-                    />
-                </label>
-                <label>
-                    Alt3
-                    <input
-                        type="text"
-                        value={questionAlternative3}
-                        onChange={(e) =>
-                            setQuestionAlternative3(e.target.value)
-                        }
-                    />
-                </label>
-                <label>
-                    Alt4
-                    <input
-                        type="text"
-                        value={questionAlternative4}
-                        onChange={(e) =>
-                            setQuestionAlternative4(e.target.value)
-                        }
-                    />
-                </label>
-                <label>
-                    Svar (nr)
-                    <input
-                        type="number"
-                        value={questionAnswer}
-                        onChange={(e) =>
-                            setQuestionAnswer(parseInt(e.target.value))
-                        }
-                    />
-                </label>
-                <button
-                    onClick={() => {
-                        postQuestion({
-                            text: questionText,
-                            askDate: questionAskDate,
-                            answer: questionAnswer as Answer,
-                            alternatives: {
-                                1: questionAlternative1,
-                                2: questionAlternative2,
-                                3: questionAlternative3,
-                                4: questionAlternative4,
-                            },
-                            // @ts-ignore
-                            subjectId: questionSubject,
-                        });
-                        setQuestionDialogOpen(false);
-                    }}
-                >
-                    Send
-                </button>
-            </Dialog>
-            <button onClick={() => setSubjectDialogOpen(true)}>
+            {questionDialogOpen && (
+                <QuestionDialog
+                    mode={questionDialogMode}
+                    question={selectedQuestion}
+                    subjects={subjects!}
+                    questionAskDate={questionAskDate}
+                    isOpen={questionDialogOpen}
+                    onClose={() => setQuestionDialogOpen(false)}
+                />
+            )}
+            <button className="btn" onClick={() => setSubjectDialogOpen(true)}>
                 Legg til tema
             </button>
-            <button onClick={onGoBack}>Tilbake</button>
             <div className="questions-list">
                 <p>Tid</p>
                 <p>Spørsmål</p>
-                <p>Alternativer</p>
-                <p>Svar</p>
                 <p>Tema</p>
+                <p>Action</p>
                 {questions.map((question) => {
                     const match = data?.find(
                         (q) => q.askDate === question.date.format("YYYY-MM-DD")
                     );
                     if (match) {
-                        return <QuestionItem question={match} />;
+                        return (
+                            <QuestionItem
+                                key={match.id}
+                                question={match}
+                                onEdit={() => {
+                                    setQuestionDialogMode("edit");
+                                    setSelectedQuestion(match);
+                                    setQuestionDialogOpen(true);
+                                    setQuestionAskDate(
+                                        question.date.format("YYYY-MM-DD")
+                                    );
+                                }}
+                            />
+                        );
                     } else {
                         return (
-                            <>
-                                <p>{question.date.format("YYYY-MM-DD")}</p>
-                                <button
-                                    className="questions-add"
-                                    onClick={() => {
-                                        setQuestionDialogOpen(true);
-                                        setQuestionAskDate(
-                                            question.date.format("YYYY-MM-DD")
-                                        );
-                                    }}
-                                >
-                                    add
-                                </button>
-                            </>
+                            <NewQuestionItem
+                                date={question.date}
+                                key={question.date.toString()}
+                                onAdd={() => {
+                                    setQuestionDialogMode("add");
+                                    setSelectedQuestion(undefined);
+                                    setQuestionDialogOpen(true);
+                                    setQuestionAskDate(
+                                        question.date.format("YYYY-MM-DD")
+                                    );
+                                }}
+                            />
                         );
                     }
                 })}
@@ -240,14 +148,42 @@ export function Dashboard({ onGoBack }: { onGoBack: () => void }) {
     );
 }
 
-function QuestionItem({ question }: { question: Question }) {
+function NewQuestionItem({
+    date,
+    onAdd,
+}: {
+    date: dayjs.Dayjs;
+    onAdd(): void;
+}) {
+    return (
+        <>
+            <p>{date.format("YYYY-MM-DD")}</p>
+            <button className="questions-add btn" onClick={onAdd}>
+                Add
+            </button>
+        </>
+    );
+}
+
+function QuestionItem({
+    question,
+    onEdit,
+}: {
+    question: Question;
+    onEdit(): void;
+}) {
     return (
         <>
             <p>{question.askDate}</p>
             <p>{question.text}</p>
-            <p>{JSON.stringify(question.alternatives)}</p>
-            <p>{question.answer}</p>
             <p>{question.subject.text}</p>
+            <button
+                className="questions-add btn"
+                onClick={onEdit}
+                disabled={question.state !== "inactive"}
+            >
+                Edit
+            </button>
         </>
     );
 }

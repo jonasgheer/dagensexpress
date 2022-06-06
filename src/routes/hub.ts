@@ -91,14 +91,19 @@ router.get("/", authenticate, async (req, res: Response<QuizState>) => {
 /**
  *  Get this weeks subject
  */
-router.get("/subject", authenticate, async (_, res: Response<string>) => {
+router.get("/subject", authenticate, async (req, res: Response<string>) => {
     const question = await getRepository(Question).findOne({
         relations: ["subject"],
         where: { askDate: dayjs().format("YYYY-MM-DD") },
     });
-    if (!question || question.state === "inactive") {
-        res.send("*supervanskelig tema*");
-        return;
+    if (!question) {
+        return res.send("*supervanskelig tema*");
+    }
+    if (isAdmin(req)) {
+        return res.send(question.subject.text);
+    }
+    if (question.state === "inactive") {
+        return res.send("*supervanskelig tema*");
     }
     res.send(question.subject.text);
 });

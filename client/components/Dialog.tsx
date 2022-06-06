@@ -38,7 +38,7 @@ export function Dialog({
                     <button
                         autoFocus={true}
                         onClick={onClose}
-                        className="close"
+                        className="close btn"
                     >
                         <CloseRoundedIcon />
                     </button>

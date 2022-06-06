@@ -43,11 +43,11 @@ textarea {
     height: 5em;
 }
 
-button:hover {
+.btn:hover {
     background-color: var(--white-400);
     cursor: pointer;
 }
-button:hover:not(:disabled):not(:active) {
+.btn:hover:not(:disabled):not(:active) {
     transform: translateY(-2px);
 }
 
@@ -218,11 +218,48 @@ button.close {
     display: grid;
 
     gap: 1em;
-    grid-template-columns: repeat(5, 1fr);
+    /*grid-template-columns: repeat(3, 1fr);*/
+}
+
+.adminhome-main {
+    margin: 1rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.adminhome-main > div {
+    height: 100%;
+}
+
+.adminhome-main-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.adminhome-main-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.users {
+    margin: 1rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+}
+
+button.progress {
+    margin-bottom: 1rem;
+}
+
+.hide-toggle {
+    margin-bottom: 1rem;
 }
 
 .questions-add {
-    grid-column: 5;
+    grid-column: 4;
 }
 
 .dialog.add-subject > div {
