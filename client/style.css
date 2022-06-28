@@ -247,7 +247,18 @@ button.close {
 .users {
     margin: 1rem;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.user-row {
+    display: contents;
+}
+
+.stats-choose-date {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
 }
 
 button.progress {

@@ -18,9 +18,9 @@ COPY --from=0 /app/package.* ./
 RUN npm install --only=production
 COPY --from=0 /app/build ./
 COPY public ./public
-COPY --from=0 /app/client/index.html ./public
-COPY --from=0 /app/client/index.*.js ./public
-COPY --from=0 /app/client/index.*.css ./public
+COPY --from=0 /app/client/dist/index.html ./public/
+COPY --from=0 /app/client/dist/index.*.js ./public/
+COPY --from=0 /app/client/dist/index.*.css ./public/
 
 ENV NODE_ENV=production
 ENV TYPEORM_CONNECTION=sqlite

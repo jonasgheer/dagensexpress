@@ -12,8 +12,14 @@ export function CreateNewUserDialog() {
     const [password, setPassword] = React.useState("");
     const [color, setColor] = React.useState("");
 
-    const { mutate: createUser } = useMutation(() =>
-        ax.post("/admin/user", { username, password, color })
+    const { mutate: createUser } = useMutation(
+        () => ax.post("/admin/user", { username, password, color }),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries("/users");
+                navigate("/users");
+            },
+        }
     );
 
     return (
@@ -51,8 +57,6 @@ export function CreateNewUserDialog() {
                 disabled={username === "" || password === ""}
                 onClick={() => {
                     createUser();
-                    queryClient.invalidateQueries("/users");
-                    navigate("/users");
                 }}
             >
                 Lagre

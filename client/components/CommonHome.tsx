@@ -9,6 +9,8 @@ import { HashRouter, Link, Route, Routes } from "react-router-dom";
 import { Dashboard } from "./admin/Dashboard";
 import { Users } from "./admin/Users";
 import { CreateNewUserDialog } from "./dialogs/CreateNewUserDialog";
+import { Stats } from "./admin/Stats";
+import { StatsChooseDate } from "./admin/StatsChooseDate";
 
 const socket = io();
 
@@ -88,6 +90,7 @@ export function CommonHome({
                         <>
                             <Link to="/questions">Spørsmål</Link>
                             <Link to="/users">Deltagere</Link>
+                            <Link to={"/stats/set-date"}>Stats</Link>
                         </>
                     )}
                     {user && <UserCard username={user?.username} />}
@@ -99,6 +102,11 @@ export function CommonHome({
                     <Route path="/" element={home} />
                     <Route path="/questions" element={<Dashboard />} />
                     <Route path="/users" element={<Users />} />
+                    <Route
+                        path="/stats/set-date"
+                        element={<StatsChooseDate />}
+                    />
+                    <Route path="/stats/results" element={<Stats />} />
                     <Route
                         path="/create-user"
                         element={<CreateNewUserDialog />}

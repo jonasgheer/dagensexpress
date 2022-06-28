@@ -1,7 +1,7 @@
 import * as express from "express";
 import { Request, Response } from "express";
 import * as passport from "passport";
-import { getRepository } from "typeorm";
+import { getRepository, getConnection } from "typeorm";
 import { onlineUsers } from "..";
 import { NewQuestion } from "../../common/types";
 import { Question } from "../entity/Question";
@@ -144,6 +144,51 @@ router.post("/user", authenticate, async (req, res) => {
         username: req.body.username,
         password: req.body.password,
         color: req.body.color,
+    });
+
+    return res.sendStatus(201);
+});
+
+const numberOfGuessesQuery = `with guesses as (select count(*) as numGuesses, username
+                                               from guess
+                                                        join question on guess.questionId = question.id
+                                                        join user on user.id = guess.userId
+                                               where askDate > date (?1)
+                              group by username),
+                                  correct as (
+                              select count (*) as numCorrect, username
+                              from guess
+                                  join question
+                              on guess.questionId = question.id
+                                  join user on user.id = guess.userId
+                              where guess.guess = question.answer
+                                and askDate
+                                  > date (?1)
+                              group by username)
+select numGuesses, numCorrect, round((100.0 * numCorrect / numGuesses), 1) as ratio, guesses.username
+from guesses
+         join correct on guesses.username = correct.username`;
+
+router.post("/stats/:since", authenticate, async (req, res) => {
+    if (!isAdmin(req)) {
+        res.sendStatus(401);
+    }
+
+    const stats = await getConnection().query(numberOfGuessesQuery, [
+        req.params.since,
+    ]);
+
+    const count = await getRepository(Question)
+        .createQueryBuilder("question")
+        .where("state = 'finished'")
+        .andWhere("askDate > :since")
+        .setParameters({ since: req.params.since })
+        .getCount();
+
+    return res.json({
+        stats,
+        since: req.params.since,
+        numQuestions: count,
     });
 });
 
