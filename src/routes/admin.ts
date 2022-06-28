@@ -180,7 +180,7 @@ router.post("/stats/:since", authenticate, async (req, res) => {
 
     const count = await getRepository(Question)
         .createQueryBuilder("question")
-        .where("state = 'finished'")
+        .where("(state = 'finished' or state = 'showingAnswer')")
         .andWhere("askDate > :since")
         .setParameters({ since: req.params.since })
         .getCount();
