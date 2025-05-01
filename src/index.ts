@@ -21,6 +21,9 @@ export let io: Server;
 
 type userId = number;
 
+console.log("===========")
+console.log(process.env.JWT_SECRET)
+
 export let onlineUsers = new Map<
     userId,
     { timestamp: number; userId: userId; userName: string }
@@ -121,7 +124,7 @@ createConnection()
             });
 
             socket.on("token", (token: string) => {
-                const decoded = jwt.decode(token.split(" ")[1]) as Token;
+                const decoded = jwt.decode(token.split(" ")[1]) as unknown as Token;
                 if (decoded.adm) {
                     socket.join("admins");
                 }
